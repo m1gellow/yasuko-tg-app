@@ -115,10 +115,6 @@ const StartScreen: React.FC<StartScreenProps> = ({
                 <img src="/assets/oreh.png" alt="Грецкий" className="w-8 h-8 mb-1" />
                 <span className="text-orange-400 font-medium">+2</span>
               </div>
-              <div className="flex flex-col items-center">
-                <img src="/assets/funduk.png" alt="Фундук" className="w-8 h-8 mb-1" />
-                <span className="text-red-400 font-medium">+3</span>
-              </div>
             </div>
             
             {/* Лимит игр */}

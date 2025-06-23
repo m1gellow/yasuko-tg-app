@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useGame } from '../../../contexts/GameContext';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTelegram } from '../../../contexts/TelegramContext';
-import { XIcon, Clock, BoltIcon, TrophyIcon, PauseIcon, PlayIcon } from 'lucide-react';
-import { GameResult } from '../../../types';
+import { BoltIcon,  } from 'lucide-react';
 import { gameService } from '../../../services/gameService';
 
 import GameArea from './GameArea';
@@ -50,8 +48,6 @@ const NutCatcherGame: React.FC<NutCatcherGameProps> = ({ onClose, onEnergyEarned
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [timeToReset, setTimeToReset] = useState<string>('');
   const resetTimerRef = useRef<NodeJS.Timeout | null>(null);
-  
-  const { state, dispatch } = useGame();
   const { user } = useAuth();
   const { telegram } = useTelegram();
 
