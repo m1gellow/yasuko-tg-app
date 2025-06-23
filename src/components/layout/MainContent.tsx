@@ -1,16 +1,16 @@
 import React, { memo, useEffect, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import Header from '../Header';
 import TapGame from '../TapGame';
-import Leaderboard from '../Leaderboard';
-import Store from '../Store';
-import Profile from '../Profile';
-import Gifts from '../Gifts';
-import Navigation from '../Navigation';
-import NutCatcherGame from '../games/NutCatcherGame';
+import Leaderboard from '../../features/leaderboard/components/Leaderboard';
+import Store from '../../features/store/components/Store';
+import Profile from '../../features/profile/components/Profile';
+import Gifts from '../ui/Gifts';
+import NutCatcherGame from '../../features/games/NutCatcherGame/components/ui';
 import { useAnalytics } from '../../hooks/useAnalytics';
-import { TabContentProps, MainContentProps } from '../../types';
+import { TabContentProps, MainContentProps, StoreItem } from '../../types';
 import { useGame } from '../../contexts/GameContext';
+import Header from './Header';
+import Navigation from '../ui/Navigation';
 
 // Определяем тип для табов
 type TabKey = 'game' | 'leaderboard' | 'store' | 'profile' | 'gifts';
@@ -59,34 +59,36 @@ const MainContent: React.FC<MainContentProps> = memo(
     const { dispatch } = useGame();
 
     // Формируем данные пользователя для дочерних компонентов
-    const getUserData = useCallback(
-      () => ({
-        id: user?.id || 'guest',
-        name: user?.name || 'Гость',
-        username: user?.phone || 'guest',
-        level: state.level.current,
-        energy: {
-          current: Math.round(state.energy.current),
-          max: state.energy.max,
-          replenishRate: state.energy.regenRate,
-        },
-        score: Math.round(state.coins),
-        rating: state.progress.current,
-        maxRating: state.progress.required,
-        items: [],
-        achievements: [],
-        lastActive: new Date(),
-        dailyLoginDay: 1,
-        position: user?.position || 0,
-      }),
-      [user, state],
-    );
+ const getUserData = useCallback(
+  () => ({
+    id: user?.id || 'guest',
+    name: user?.name || 'Гость',
+    username: user?.id || 'guest',
+    level: state.level.current,
+    energy: {
+      current: Math.round(state.energy.current),
+      max: state.energy.max,
+      replenishRate: state.energy.regenRate,
+    },
+    score: Math.round(state.coins),
+    total_clicks: state.totalClicks || 0, // Добавлено это поле
+    rating: state.progress.current,
+    maxRating: state.progress.required,
+    items: [],
+    achievements: [],
+    lastActive: new Date(),
+    dailyLoginDay: 1,
+    position: user?.position || 0,
+  }),
+  [user, state],
+);
 
     const userForComponents = getUserData();
 
     // Устанавливаем заголовок страницы
     useEffect(() => {
-      document.title = TAB_TITLES[activeTab] || TAB_TITLES.default;
+      const tabKey = Object.keys(PATH_TO_TAB).find((key) => PATH_TO_TAB[key] === activeTab);
+      document.title = tabKey ? TAB_TITLES[tabKey as TabKey] : TAB_TITLES.default;
     }, [activeTab]);
 
     // Синхронизация URL и активного таба
@@ -168,7 +170,6 @@ const MainContent: React.FC<MainContentProps> = memo(
           <Header
             user={userForComponents}
             devMode={false}
-            onRefillEnergy={onRefillEnergy}
             notifications={notifications}
             onMarkAsRead={onMarkAsRead}
             onMarkAllAsRead={onMarkAllAsRead}
@@ -190,7 +191,7 @@ const MainContent: React.FC<MainContentProps> = memo(
         <TabContent activeTab={activeTab} tabName="store">
           <Store
             userCoins={Math.round(state.coins)}
-            onPurchase={(item) => {
+            onPurchase={(item: StoreItem) => {
               onPurchase(item);
               user &&
                 analytics.trackPurchase(item.id, item.name, item.price, item.category, {

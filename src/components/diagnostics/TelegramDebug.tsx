@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useTelegram } from '../../contexts/TelegramContext';
+
+import { useTelegramAuth } from '../../features/auth/hooks/useTelegramAuth';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTelegramAuth } from '../../hooks/useTelegramAuth';
+
 
 const TelegramDebug: React.FC = () => {
-  const { telegram, user: telegramUser, isReady, error } = useTelegram();
+  const {user: telegramUser, isReady, error } = useTelegram();
   const { user: authUser, loading } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [sessionState, setSessionState] = useState<any>(null);

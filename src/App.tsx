@@ -1,20 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import TelegramOptionsScreen from './components/auth/TelegramOptionsScreen';
+import TelegramOptionsScreen from './features/auth/components/ui/TelegramOptionsScreen';
 import OnboardingScreen from './components/onboarding/OnboardingScreen';
 import { GameProvider, useGame } from './contexts/GameContext';
 import { TelegramProvider, useTelegram } from './contexts/TelegramContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+
 import { TapTarget, StoreItem } from './types';
 import { gameService } from './services/gameService';
 import { userService } from './services/userService';
 import { referralService } from './services/referralService';
 import { notificationService } from './services/notificationService';
-import { leaderboardService } from './services/leaderboardService';
+import { leaderboardService } from './features/leaderboard/services/leaderboardService';
 import { useOnboarding } from './hooks/useOnboarding';
 import MainContent from './components/layout/MainContent';
 import './index.css';
 import { generateMainContentProps } from './utils/generateMainContentProps';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Обертка для App с провайдерами
 const AppWithProviders: React.FC = () => {
@@ -516,29 +517,29 @@ const AppContent: React.FC = () => {
   if (showOnboarding) {
     return <OnboardingScreen onComplete={handleOnboardingComplete} />;
   }
- const MainContentProps = generateMainContentProps(
-  user,
-  state,
-  userRank,
-  notifications,
-  tapTarget,
-  showCharacterCard,
-  showPurchaseNotification,
-  lastPurchase,
-  isTapAnimationActive,
-  {
-    handleMarkAsRead,
-    handleMarkAllAsRead,
-    handleDeleteNotification,
-    handleRefillEnergy,
-    handleTap,
-    handleLevelUp,
-    handlePurchase,
-    setActiveTab,
-    handleToggleCharacterCard,
-    getRecommendations,
-  }
-);
+  const MainContentProps = generateMainContentProps(
+    user,
+    state,
+    userRank,
+    notifications,
+    tapTarget,
+    showCharacterCard,
+    showPurchaseNotification,
+    lastPurchase,
+    isTapAnimationActive,
+    {
+      handleMarkAsRead,
+      handleMarkAllAsRead,
+      handleDeleteNotification,
+      handleRefillEnergy,
+      handleTap,
+      handleLevelUp,
+      handlePurchase,
+      setActiveTab,
+      handleToggleCharacterCard,
+      getRecommendations,
+    },
+  );
 
   return (
     <div className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 min-h-screen text-white relative">

@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { analyticsService } from '../services/analyticsService';
 import { useAuth } from '../contexts/AuthContext';
 
+
 /**
  * Хук для автоматического отслеживания просмотров страниц и других аналитических событий
  */

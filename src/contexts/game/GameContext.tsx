@@ -4,7 +4,7 @@ import { GameAction, resetDailyTasksAction } from './actions';
 import { initialGameState } from './initialState';
 import { gameReducer } from './reducer';
 import { gameService } from '../../services/gameService';
-import { leaderboardService } from '../../services/leaderboardService';
+import { leaderboardService } from '../../features/leaderboard/services/leaderboardService';
 
 // Создание контекста
 interface GameContextType {

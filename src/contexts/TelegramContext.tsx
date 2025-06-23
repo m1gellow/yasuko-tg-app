@@ -9,6 +9,7 @@ interface TelegramHapticFeedback {
 }
 
 interface TelegramWebApp {
+  openTelegramLink: any;
   initData: string;
   initDataUnsafe: TelegramWebAppInitData;
   version: string;

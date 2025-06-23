@@ -1,5 +1,6 @@
 // Определение типа состояния игры
 export interface GameState {
+  totalClicks: number;
   energy: {
     current: number;
     max: number;

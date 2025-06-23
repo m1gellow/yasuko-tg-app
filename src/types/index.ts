@@ -45,7 +45,6 @@ export interface User {
   id: string;
   name: string;
   username: string;
-  phone: number;
   level: number;
   energy: {
     current: number;
@@ -53,6 +52,9 @@ export interface User {
     replenishRate: number;
   };
   score: number;
+  total_clicks?: number;
+  status?: string; // Добавляем новое свойство
+  thoughtStatus?: string; // Или это, если используется другое название
   rating: number;
   maxRating: number;
   items: any[]; // или более конкретный тип
@@ -90,6 +92,37 @@ export interface Reward {
   type: 'coins' | 'energy' | 'item' | 'booster';
   amount: number;
   itemId?: string;
+}
+
+export interface GameAreaProps {
+  isActive: boolean;
+  onScoreUpdate: (points: number) => void;
+  onTimerUpdate: () => void;
+}
+
+export interface StoreProps {
+  userCoins: number;
+  onPurchase: (item: StoreItem) => void;
+}
+
+export interface NutType {
+  id: number;
+  x: number;
+  y: number;
+  speed: number;
+  rotation: number;
+  size: number;
+  type: 'acorn' | 'walnut' | 'hazelnut';
+}
+
+export interface NotificationItem {
+  id: string;
+  type: 'achievement' | 'rating' | 'reward' | 'system' | 'message';
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  data?: any;
 }
 
 export interface TapTarget {
