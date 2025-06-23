@@ -334,14 +334,7 @@ const TapGame: React.FC<TapGameProps> = React.memo(({
   return (
     <div className="bg-gradient-to-b from-[#0f0c1d] via-[#1a1538] to-[#0f0c1d] min-h-screen p-4 pb-24">
       <div className="max-w-md mx-auto">
-        {/* Header */}
-        <div className="mb-6 text-center">
-          <div className="inline-flex items-center justify-center bg-gradient-to-r from-yellow-500 to-orange-500 text-transparent bg-clip-text">
-            <SunIcon className="mr-2" size={24} />
-            <h1 className="text-2xl font-extrabold tracking-wide">ТАП-ИГРА</h1>
-          </div>
-          <p className="text-sm text-gray-400 mt-1">Тапайте и зарабатывайте монеты</p>
-        </div>
+       
 
         {/* Stats Bar */}
         <div className="mb-6 bg-gradient-to-br from-[#2a1a4a] to-[#1a0e33] rounded-xl p-4 border border-purple-500/20 shadow-lg">
