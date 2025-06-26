@@ -16,6 +16,7 @@ import MainContent from './components/layout/MainContent';
 import './index.css';
 import { generateMainContentProps } from './utils/generateMainContentProps';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import AuthScreen from './features/auth/components/ui/AuthScreen';
 
 // Обертка для App с провайдерами
 const AppWithProviders: React.FC = () => {
@@ -332,47 +333,51 @@ const AppContent: React.FC = () => {
   ]);
 
   // Handle tap - реализация логики: 1 тап = -1 энергия, +1 к общему рейтингу, +1 к личному рейтингу, +1 монета
- const handleTap = useCallback(
-  (points: number) => {
-    if (state.energy.current <= 0) return;
+  const handleTap = useCallback(
+    (points: number) => {
+      if (state.energy.current <= 0) return;
 
-    setIsTapAnimationActive(true);
-    setTimeout(() => setIsTapAnimationActive(false), 300);
+      setIsTapAnimationActive(true);
+      setTimeout(() => setIsTapAnimationActive(false), 300);
 
-    // 1. Обновляем очки и энергию
-    dispatch({ type: 'TAP', payload: points });
+      // Обновляем очки и энергию через GameContext
+      dispatch({ type: 'TAP', payload: points });
 
-    // 2. Проверяем переход на новый уровень
-    const newProgress = state.progress.current + 1;
-    const newLevel = Math.floor(newProgress / 100) + 1;
-    const shouldLevelUp = newProgress >= state.progress.required;
+      // Обновляем количество тапов
+      setTapTarget((prevTarget) => {
+        const newTaps = prevTarget.currentTaps + 1;
+        const newLevel = Math.floor(state.progress.current / 100) + 1;
 
-    // 3. Если нужно перейти на новый уровень
-    if (shouldLevelUp) {
-      dispatch({ type: 'EVOLVE' }); // Сбрасывает progress.current в 0 и увеличивает level
-      setTapTarget((prev) => ({
-        ...prev,
-        level: newLevel,
-        name: getLevelName(newLevel),
-        currentTaps: 0,
-        requiredTaps: 100 * newLevel, // Увеличиваем сложность для следующего уровня
-        basePoints: prev.basePoints + 0.5,
-      }));
-    } else {
-      // 4. Иначе просто обновляем тапы
-      setTapTarget((prev) => ({
-        ...prev,
-        currentTaps: newProgress % 100,
-      }));
-    }
+        // Если это изменило уровень, обновляем все данные
+        if (newLevel !== prevTarget.level) {
+          return {
+            ...prevTarget,
+            level: newLevel,
+            name: getLevelName(newLevel),
+            currentTaps: state.progress.current % 100,
+            requiredTaps: newLevel >= 2 ? 999999 : 100, // 100 тапов на первый уровень, потом эволюции нет
+          };
+        }
 
-    // 5. Обновляем данные на сервере
-    if (user) {
-      userService.updateUser(user.id, { total_clicks: (user.total_clicks || 0) + 1 }).catch(console.error);
-    }
-  },
-  [dispatch, state.energy.current, state.progress.current, state.progress.required, user],
-);
+        // Иначе просто обновляем текущие тапы
+        return {
+          ...prevTarget,
+          currentTaps: newTaps,
+          level: newLevel,
+        };
+      });
+
+      // Если пользователь авторизован, обновляем данные на сервере
+      if (user) {
+        userService
+          .updateUser(user.id, {
+            total_clicks: (user.total_clicks || 0) + 1,
+          })
+          .catch(console.error);
+      }
+    },
+    [dispatch, state.energy.current, state.progress.current, user],
+  );
 
   // Handle level up
   const handleLevelUp = useCallback(() => {
@@ -557,6 +562,8 @@ const AppContent: React.FC = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       )}
+
+      {/* <AuthScreen/> */}
     </div>
   );
 };

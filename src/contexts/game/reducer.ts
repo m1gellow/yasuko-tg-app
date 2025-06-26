@@ -27,7 +27,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
       // Логика эволюции: орех (уровень 1) -> белка (уровень 2)
       // Переход на уровень 2 происходит при 100 тапах
-      if (newProgress >= 100 && currentLevel === 1) {
+      if (newProgress >= 20 && currentLevel === 1) {
         currentLevel = 2;
       }
 
