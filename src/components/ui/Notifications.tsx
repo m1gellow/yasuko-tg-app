@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BellIcon, XIcon, TrophyIcon, BarChartIcon as ChartIcon, GiftIcon, InfoIcon, MessageCircleIcon, BellOff } from 'lucide-react';
+import { BellIcon, XIcon, TrophyIcon, BarChart2Icon, GiftIcon, InfoIcon, MessageCircleIcon, BellOffIcon } from 'lucide-react';
 import { useTelegram } from '../../contexts/TelegramContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { NotificationItem } from '../../types';
-
 
 interface NotificationsProps {
   notifications: NotificationItem[];
@@ -22,72 +21,44 @@ const Notifications: React.FC<NotificationsProps> = ({
   const { user } = useAuth();
   const { telegram } = useTelegram();
   
-  // Получаем только непрочитанные уведомления для счетчика
   const unreadCount = notifications.filter(n => !n.is_read).length;
   
-  
-  // При открытии/закрытии окна уведомлений
   useEffect(() => {
     if (isOpen && telegram?.HapticFeedback) {
       telegram.HapticFeedback.impactOccurred('light');
     }
   }, [isOpen, telegram]);
-  
-  // Убираем дубликаты уведомлений с одинаковыми заголовками и типами
+
   const uniqueNotifications = notifications.reduce((acc: NotificationItem[], current) => {
-    // Для уведомлений типа achievement проверяем заголовок и сообщение
     if (current.type === 'achievement') {
       const duplicate = acc.find(item => 
         item.type === current.type && 
         item.title === current.title && 
         item.message === current.message
       );
-      
-      if (!duplicate) {
-        acc.push(current);
-      }
+      if (!duplicate) acc.push(current);
     } else {
-      // Для других типов просто добавляем
       acc.push(current);
     }
     return acc;
   }, []);
 
-  // Получение иконки по типу уведомления
   const getNotificationIcon = (type: string) => {
+    const iconClass = "w-5 h-5 p-1 rounded-full";
     switch (type) {
       case 'achievement':
-        return <TrophyIcon size={16} className="text-yellow-500" />;
+        return <TrophyIcon className={`${iconClass} text-yellow-500 bg-yellow-500/10`} />;
       case 'rating':
-        return <ChartIcon size={16} className="text-green-500" />;
+        return <BarChart2Icon className={`${iconClass} text-green-500 bg-green-500/10`} />;
       case 'reward':
-        return <GiftIcon size={16} className="text-purple-500" />;
+        return <GiftIcon className={`${iconClass} text-purple-500 bg-purple-500/10`} />;
       case 'message':
-        return <MessageCircleIcon size={16} className="text-blue-500" />;
-      case 'system':
+        return <MessageCircleIcon className={`${iconClass} text-blue-500 bg-blue-500/10`} />;
       default:
-        return <InfoIcon size={16} className="text-blue-500" />;
+        return <InfoIcon className={`${iconClass} text-gray-500 bg-gray-500/10`} />;
     }
   };
   
-  // Получение цвета линии по типу уведомления
-  const getBorderColor = (type: string) => {
-    switch (type) {
-      case 'achievement':
-        return 'border-yellow-500';
-      case 'rating':
-        return 'border-green-500';
-      case 'reward':
-        return 'border-purple-500';
-      case 'message':
-        return 'border-blue-500';
-      case 'system':
-      default:
-        return 'border-gray-500';
-    }
-  };
-  
-  // Форматирование даты и времени
   const formatDateTime = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -97,160 +68,132 @@ const Notifications: React.FC<NotificationsProps> = ({
         hour: '2-digit',
         minute: '2-digit'
       });
-    } catch (error) {
-      return 'недавно';
+    } catch {
+      return 'только что';
     }
   };
 
   const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      setIsOpen(false);
-    }
+    if (e.target === e.currentTarget) setIsOpen(false);
   };
   
   const handleOpenNotifications = () => {
-    // Хаптик-фидбек при открытии
-    if (telegram?.HapticFeedback) {
-      telegram.HapticFeedback.selectionChanged();
-    }
-    
+    telegram?.HapticFeedback?.selectionChanged();
     setIsOpen(true);
   };
   
   const handleMarkAsRead = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    // Хаптик-фидбек при отметке прочитанным
-    if (telegram?.HapticFeedback) {
-      telegram.HapticFeedback.selectionChanged();
-    }
-    
+    telegram?.HapticFeedback?.selectionChanged();
     onMarkAsRead(id);
   };
   
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    // Хаптик-фидбек при удалении
-    if (telegram?.HapticFeedback) {
-      telegram.HapticFeedback.impactOccurred('light');
-    }
-    
+    telegram?.HapticFeedback?.impactOccurred('light');
     onDelete(id);
   };
   
   const handleMarkAllAsRead = () => {
-    // Хаптик-фидбек при отметке всех прочитанными
-    if (telegram?.HapticFeedback) {
-      telegram.HapticFeedback.notificationOccurred('success');
-    }
-    
+    telegram?.HapticFeedback?.notificationOccurred('success');
     onMarkAllAsRead();
   };
 
   return (
-    <div className="relative flex items-center">
-      {/* Аватар пользователя */}
-      <div className="flex items-center mr-2">
-        <div className="h-8 w-8 rounded-full overflow-hidden shadow-md">
-          {user?.avatar_url ? (
-            <img 
-              src={user.avatar_url} 
-              alt={user.name} 
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.onerror = null;
-                target.src = 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(user.name);
-              }}
-            />
-          ) : (
-            <div className="h-full w-full bg-gray-600 flex items-center justify-center text-white">
-              {user?.name ? user.name.charAt(0).toUpperCase() : '?'}
-            </div>
-          )}
-        </div>
-        <span className="text-sm hidden md:block ml-2">{user?.name || 'Пользователь'}</span>
-      </div>
-      
+    <div className="relative">
+      {/* Notification Bell */}
       <button 
         onClick={handleOpenNotifications}
-        className="relative p-2 rounded-full hover:bg-[#252538] transition-colors"
-        aria-label={unreadCount > 0 ? `Уведомления: ${unreadCount} непрочитанных` : "Уведомления"}
+        className="relative p-2 rounded-full hover:bg-[#252538]/50 transition-colors group"
+        aria-label={`Уведомления (${unreadCount} новых)`}
       >
-        <BellIcon size={20} className="text-gray-400" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
-            {unreadCount}
-          </span>
-        )}
+        <div className="relative">
+          <BellIcon className="w-6 h-6 text-gray-300 group-hover:text-white transition-colors" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center animate-pulse">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </div>
       </button>
       
+      {/* Notification Panel */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-start justify-center pt-16 pb-4 px-4 overflow-y-auto" onClick={handleClickOutside}>
-          <div className="bg-[#252538] rounded-lg w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
-            <div className="p-4 border-b border-[#323248] sticky top-0 bg-[#252538] z-10">
+        <div 
+          className="fixed inset-0 bg-black/70 z-50 flex justify-end pt-16 pb-4 px-4"
+          onClick={handleClickOutside}
+        >
+          <div 
+            className="bg-gradient-to-b from-[#1e183a] to-[#15122b] rounded-xl w-full max-w-sm shadow-xl border border-purple-500/20 animate-slide-left"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-b from-[#1e183a] to-[#1e183a]/90 p-4 border-b border-purple-500/20 z-10 backdrop-blur-sm">
               <div className="flex justify-between items-center">
-                <h3 className="font-bold text-lg">Уведомления</h3>
-                <button 
-                  onClick={() => setIsOpen(false)}
-                  className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-[#323248]"
-                  aria-label="Закрыть"
-                >
-                  <XIcon size={18} />
-                </button>
+                <h3 className="text-xl font-bold text-white">Уведомления</h3>
+                <div className="flex space-x-2">
+                  {unreadCount > 0 && (
+                    <button 
+                      onClick={handleMarkAllAsRead}
+                      className="text-xs bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 px-3 py-1 rounded-lg transition-colors"
+                    >
+                      Прочитать все
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => setIsOpen(false)}
+                    className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-[#323248] transition-colors"
+                  >
+                    <XIcon size={20} />
+                  </button>
+                </div>
               </div>
-              {unreadCount > 0 && (
-                <button 
-                  onClick={handleMarkAllAsRead}
-                  className="text-xs text-blue-400 mt-1 hover:text-blue-300 transition-colors"
-                >
-                  Отметить все как прочитанные
-                </button>
-              )}
             </div>
             
+            {/* Notifications List */}
             <div className="max-h-[70vh] overflow-y-auto">
               {uniqueNotifications.length > 0 ? (
-                <div>
+                <div className="divide-y divide-purple-500/10">
                   {uniqueNotifications.map((notification) => (
                     <div 
                       key={notification.id}
-                      className={`p-4 border-b border-[#323248] hover:bg-[#2D2D44] ${!notification.is_read ? 'bg-[#2D2D44]/50' : ''} transition-colors`}
+                      className={`p-4 hover:bg-[#252538]/50 transition-colors cursor-pointer ${!notification.is_read ? 'bg-[#252538]' : ''}`}
                       onClick={(e) => !notification.is_read && handleMarkAsRead(notification.id, e)}
                     >
-                      <div className="flex">
-                        <div className={`border-l-4 ${getBorderColor(notification.type)} pl-2 flex-grow`}>
-                          <div className="flex items-start">
-                            <div className="mr-2 mt-1">
-                              {getNotificationIcon(notification.type)}
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-sm md:text-base">{notification.title}</h4>
-                              <p className="text-xs md:text-sm text-gray-400">{notification.message}</p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {formatDateTime(notification.created_at)}
-                              </p>
-                            </div>
-                          </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="mt-1">
+                          {getNotificationIcon(notification.type)}
                         </div>
-                        
-                        <button 
-                          onClick={(e) => handleDelete(notification.id, e)}
-                          className="text-gray-400 hover:text-red-500 ml-2 p-1 hover:bg-[#353553] rounded transition-colors"
-                          aria-label="Удалить уведомление"
-                        >
-                          <XIcon size={16} />
-                        </button>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start">
+                            <h4 className={`font-medium text-sm ${!notification.is_read ? 'text-white' : 'text-gray-300'}`}>
+                              {notification.title}
+                            </h4>
+                            <button 
+                              onClick={(e) => handleDelete(notification.id, e)}
+                              className="text-gray-500 hover:text-red-400 ml-2 transition-colors"
+                            >
+                              <XIcon size={16} />
+                            </button>
+                          </div>
+                          <p className="text-sm text-gray-400 mt-1">{notification.message}</p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {formatDateTime(notification.created_at)}
+                            {!notification.is_read && (
+                              <span className="ml-2 text-blue-400">Новое</span>
+                            )}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="p-8 text-center">
-                  <div className="flex flex-col items-center">
-                    <BellOff size={32} className="text-gray-500 mb-3" />
-                    <p className="text-gray-400">У вас пока нет уведомлений</p>
+                  <div className="flex flex-col items-center justify-center space-y-3">
+                    <BellOffIcon className="w-10 h-10 text-gray-500/50" />
+                    <p className="text-gray-400">Нет новых уведомлений</p>
+                    <p className="text-xs text-gray-500">Здесь будут появляться важные события</p>
                   </div>
                 </div>
               )}
