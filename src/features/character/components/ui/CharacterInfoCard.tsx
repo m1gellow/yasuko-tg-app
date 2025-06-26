@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { TapTarget } from '../../../../types';
 import { useGame } from '../../../../contexts/GameContext';
-import { ZapIcon, ChevronRightIcon, StarIcon } from 'lucide-react';
+import { ZapIcon, ChevronRightIcon, StarIcon, XIcon } from 'lucide-react';
 
 interface CharacterInfoCardProps {
   target: TapTarget;

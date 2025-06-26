@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { usePhrases } from '../../../../hooks/usePhrases';
-
 import { gameService } from '../../../../services/gameService';
 import { useTelegram } from '../../../../contexts/TelegramContext';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { XIcon, Heart, Utensils, Gamepad2, Zap } from 'lucide-react';
 
 interface CharacterCardProps {
   level: number;
@@ -12,13 +12,21 @@ interface CharacterCardProps {
   hunger: number;
   mood: string;
   characterType: 'yasuko' | 'fishko';
+  onToggleCharacterCard: () => void;
 }
 
-const CharacterCard: React.FC<CharacterCardProps> = ({ level, health, happiness, hunger, mood, characterType }) => {
-  const [showFeedPhrase, setShowFeedPhrase] = useState(false);
-  const [showPlayPhrase, setShowPlayPhrase] = useState(false);
-  const [currentFeedPhrase, setCurrentFeedPhrase] = useState('');
-  const [currentPlayPhrase, setCurrentPlayPhrase] = useState('');
+const CharacterCard: React.FC<CharacterCardProps> = ({
+  level,
+  health,
+  happiness,
+  hunger,
+  mood,
+  characterType,
+  onToggleCharacterCard
+}) => {
+  const [showPhrase, setShowPhrase] = useState(false);
+  const [currentPhrase, setCurrentPhrase] = useState('');
+  const [actionType, setActionType] = useState<'feed' | 'play' | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const { user } = useAuth();
   const { telegram } = useTelegram();
@@ -26,71 +34,50 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ level, health, happiness,
   const { getRandomPhrase: getRandomFeedPhrase } = usePhrases('feed');
   const { getRandomPhrase: getRandomPlayPhrase } = usePhrases('pet');
 
-  // Определение типа персонажа для заголовка
   const getCharacterName = () => {
     if (characterType === 'yasuko') {
-      // Названия для Ясуко
-      switch (true) {
-        case level === 1:
-          return 'ОРЕХ';
-        case level >= 2:
-          return 'БЕЛКА';
-        default:
-          return 'ЯСУКО';
-      }
+      return level === 1 ? 'ОРЕХ' : 'БЕЛКА';
     } else {
-      // Названия для Фишко
-      switch (true) {
-        case level === 1:
-          return 'ИКРИНКА ФИШКО';
-        case level === 2:
-          return 'МАЛЫШ ФИШКО';
-        case level >= 3:
-          return 'ФИШКО';
-        default:
-          return 'ФИШКО';
-      }
+      return level === 1 ? 'ИКРИНКА' : level === 2 ? 'МАЛЫШ' : 'ФИШКО';
     }
   };
 
-  // Обработчик кормления
-  const handleFeed = useCallback(async () => {
+  const getMoodColor = () => {
+    if (happiness >= 80) return 'text-green-400';
+    if (happiness >= 50) return 'text-yellow-400';
+    return 'text-red-400';
+  };
+
+  const handleAction = useCallback(async (type: 'feed' | 'play') => {
     if (!user || isUpdating) return;
 
-    // Хаптик-фидбек при кормлении
     if (telegram?.HapticFeedback) {
       telegram.HapticFeedback.impactOccurred('medium');
     }
 
     setIsUpdating(true);
+    setActionType(type);
 
     try {
-      // Отображаем фразу
-      const phrase = getRandomFeedPhrase();
-      setCurrentFeedPhrase(phrase);
-      setShowFeedPhrase(true);
+      const phrase = type === 'feed' ? getRandomFeedPhrase() : getRandomPlayPhrase();
+      setCurrentPhrase(phrase);
+      setShowPhrase(true);
 
-      // Скрываем фразу через некоторое время
-      setTimeout(() => {
-        setShowFeedPhrase(false);
-      }, 3000);
+      setTimeout(() => setShowPhrase(false), 2000);
 
-      // Записываем действие в базу данных
-      await gameService.recordUserAction(user.id, 'feed');
-
-      // Детальное отслеживание действия кормления
-      await gameService.trackUserAction(user.id, 'character_feed', {
+      await gameService.recordUserAction(user.id, type);
+      
+      await gameService.trackUserAction(user.id, `character_${type}`, {
         character_type: characterType,
         character_level: level,
         timestamp: new Date().toISOString(),
-        hunger_before: hunger,
-        hunger_after: Math.min(100, hunger + 20),
+        stat_before: type === 'feed' ? hunger : happiness,
+        stat_after: Math.min(100, (type === 'feed' ? hunger : happiness) + 20),
         phrase: phrase,
       });
 
-      // Обновляем характеристики персонажа
       const result = await gameService.updateCharacter(user.id, {
-        satiety: Math.min(100, hunger + 20),
+        ...(type === 'feed' ? { satiety: Math.min(100, hunger + 20) } : { mood: Math.min(100, happiness + 20) }),
         last_interaction: new Date().toISOString(),
       });
 
@@ -98,191 +85,122 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ level, health, happiness,
         console.error('Failed to update character:', result.error);
       }
     } catch (error) {
-      console.error('Error in handleFeed:', error);
+      console.error(`Error in handle${type === 'feed' ? 'Feed' : 'Play'}:`, error);
     } finally {
       setIsUpdating(false);
+      setActionType(null);
     }
-  }, [getRandomFeedPhrase, user, hunger, isUpdating, characterType, level, telegram]);
+  }, [getRandomFeedPhrase, getRandomPlayPhrase, user, hunger, happiness, isUpdating, characterType, level, telegram]);
 
-  // Обработчик игры с персонажем
-  const handlePlay = useCallback(async () => {
-    if (!user || isUpdating) return;
-
-    // Хаптик-фидбек при игре с персонажем
-    if (telegram?.HapticFeedback) {
-      telegram.HapticFeedback.impactOccurred('medium');
-    }
-
-    setIsUpdating(true);
-
-    try {
-      // Отображаем фразу
-      const phrase = getRandomPlayPhrase();
-      setCurrentPlayPhrase(phrase);
-      setShowPlayPhrase(true);
-
-      // Скрываем фразу через некоторое время
-      setTimeout(() => {
-        setShowPlayPhrase(false);
-      }, 3000);
-
-      // Записываем действие в базу данных
-      await gameService.recordUserAction(user.id, 'pet');
-
-      // Детальное отслеживание действия игры
-      await gameService.trackUserAction(user.id, 'character_pet', {
-        character_type: characterType,
-        character_level: level,
-        timestamp: new Date().toISOString(),
-        happiness_before: happiness,
-        happiness_after: Math.min(100, happiness + 20),
-        phrase: phrase,
-      });
-
-      // Обновляем характеристики персонажа
-      const result = await gameService.updateCharacter(user.id, {
-        mood: Math.min(100, happiness + 20),
-        last_interaction: new Date().toISOString(),
-      });
-
-      if (!result.success) {
-        console.error('Failed to update character:', result.error);
-      }
-    } catch (error) {
-      console.error('Error in handlePlay:', error);
-    } finally {
-      setIsUpdating(false);
-    }
-  }, [getRandomPlayPhrase, user, happiness, isUpdating, characterType, level, telegram]);
-
-  // Для Ореха (уровень 1) показываем только прогресс до эволюции
-  if (level === 1 && characterType === 'yasuko') {
-    return (
-      <div className="bg-[#232334] rounded-lg p-4 shadow-lg w-full max-w-sm mx-auto relative">
-        {/* Фраза от персонажа при кормлении */}
-        {showFeedPhrase && (
-          <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-lg text-sm animate-fade-in-down whitespace-normal max-w-full text-center z-20">
-            {currentFeedPhrase}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h3 className="font-bold text-lg md:text-xl text-yellow-400">ОРЕХ</h3>
-            <p className="text-sm md:text-base text-gray-400">Уровень {level}</p>
-          </div>
+  const renderProgressBar = (value: number, color: string, icon: React.ReactNode) => (
+    <div className="flex items-center space-x-3">
+      <div className="text-gray-400">{icon}</div>
+      <div className="flex-1">
+        <div className="flex justify-between text-xs mb-1">
+          <span className="text-gray-300">{Math.round(value)}%</span>
         </div>
-
-        <div className="mb-4">
-          <div className="flex justify-between text-sm mb-1">
-            <span>Прогресс до вылупления</span>
-            <span>{Math.round((hunger + happiness) / 2)}%</span>
-          </div>
-          <div className="w-full bg-[#323248] h-2 rounded-full overflow-hidden">
-            <div className="bg-yellow-500 h-full" style={{ width: `${(hunger + happiness) / 2}%` }} />
-          </div>
+        <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
+          <div 
+            className={`h-full transition-all duration-500 ${color}`} 
+            style={{ width: `${value}%` }} 
+          />
         </div>
-
-        <div className="flex justify-between mt-4">
-          <button
-            className="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm md:text-base font-medium flex-1 mr-2 disabled:opacity-50 hover:bg-purple-600 transition-colors"
-            onClick={handleFeed}
-            disabled={isUpdating || !user}
-          >
-            {isUpdating ? 'Кормление...' : 'Покормить'}
-          </button>
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm md:text-base font-medium flex-1 ml-2 disabled:opacity-50 hover:bg-blue-600 transition-colors"
-            onClick={handlePlay}
-            disabled={isUpdating || !user}
-          >
-            {isUpdating ? 'Играем...' : 'Поиграть'}
-          </button>
-        </div>
-
-        <p className="text-center text-gray-400 mt-4 text-sm">
-          Кормите и играйте с Орехом, чтобы он превратился в Белку!
-        </p>
       </div>
-    );
-  }
+    </div>
+  );
 
-  // Для Белки (уровень 2+) и других персонажей показываем полный набор характеристик
   return (
-    <div className="bg-[#232334] rounded-lg p-4 shadow-lg w-full max-w-sm mx-auto relative">
-      {/* Фраза от персонажа при кормлении */}
-      {showFeedPhrase && (
-        <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-lg text-sm animate-fade-in-down whitespace-normal max-w-full text-center z-20">
-          {currentFeedPhrase}
+    <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-xl w-full max-w-sm mx-auto relative border border-gray-700">
+      {/* Close button */}
+      <button 
+        onClick={onToggleCharacterCard}
+        className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors p-1 rounded-full bg-gray-700/50"
+      >
+        <XIcon size={20} />
+      </button>
+
+      {/* Character phrase */}
+      {showPhrase && (
+        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-lg text-sm animate-fade-in-down whitespace-nowrap max-w-xs text-center z-20 border border-gray-600">
+          {currentPhrase}
         </div>
       )}
 
-      {/* Фраза от персонажа при игре */}
-      {showPlayPhrase && (
-        <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-lg text-sm animate-fade-in-down whitespace-normal max-w-full text-center z-20">
-          {currentPlayPhrase}
+      {/* Header */}
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-white">{getCharacterName()}</h2>
+          <div className="flex items-center space-x-2 mt-1">
+            <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full">Уровень {level}</span>
+            <span className={`text-xs px-2 py-1 rounded-full ${getMoodColor()} bg-opacity-20`}>
+              {mood}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="space-y-4 mb-6">
+        {renderProgressBar(
+          hunger, 
+          'bg-gradient-to-r from-red-500 to-orange-500', 
+          <Utensils size={16} className="text-orange-400" />
+        )}
+        
+        {renderProgressBar(
+          happiness, 
+          'bg-gradient-to-r from-yellow-400 to-yellow-600', 
+          <Heart size={16} className="text-yellow-400" />
+        )}
+        
+        {renderProgressBar(
+          health, 
+          'bg-gradient-to-r from-green-500 to-teal-400', 
+          <Zap size={16} className="text-green-400" />
+        )}
+      </div>
+
+      {/* Action buttons */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => handleAction('feed')}
+          disabled={isUpdating || !user}
+          className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all ${
+            isUpdating && actionType === 'feed' 
+              ? 'bg-orange-600' 
+              : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+          } text-white font-medium disabled:opacity-50`}
+        >
+          <Utensils size={18} />
+          <span>{isUpdating && actionType === 'feed' ? '...' : 'Кормить'}</span>
+        </button>
+        
+        <button
+          onClick={() => handleAction('play')}
+          disabled={isUpdating || !user}
+          className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all ${
+            isUpdating && actionType === 'play' 
+              ? 'bg-blue-600' 
+              : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
+          } text-white font-medium disabled:opacity-50`}
+        >
+          <Gamepad2 size={18} />
+          <span>{isUpdating && actionType === 'play' ? '...' : 'Играть'}</span>
+        </button>
+      </div>
+
+      {/* Level 1 special info */}
+      {level === 1 && characterType === 'yasuko' && (
+        <div className="mt-6 text-center text-xs text-gray-400 bg-gray-800/50 p-3 rounded-lg">
+          Кормите и играйте с Орехом, чтобы он превратился в Белку!
+          <div className="mt-2 w-full bg-gray-700 h-1.5 rounded-full overflow-hidden">
+            <div 
+              className="bg-gradient-to-r from-yellow-400 to-orange-400 h-full" 
+              style={{ width: `${(hunger + happiness) / 2}%` }} 
+            />
+          </div>
         </div>
       )}
-
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h3 className="font-bold text-lg md:text-xl text-yellow-400">{getCharacterName()}</h3>
-          <p className="text-sm md:text-base text-gray-400">Уровень {level}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-xs md:text-sm text-gray-400">Настроение</p>
-          <p className="font-medium text-sm md:text-base">{mood}</p>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <div>
-          <div className="flex justify-between text-sm mb-1">
-            <span>Голод</span>
-            <span>{hunger}%</span>
-          </div>
-          <div className="w-full bg-[#323248] h-2 rounded-full overflow-hidden">
-            <div className="bg-red-500 h-full" style={{ width: `${hunger}%` }} />
-          </div>
-        </div>
-
-        <div>
-          <div className="flex justify-between text-sm mb-1">
-            <span>Счастье</span>
-            <span>{happiness}%</span>
-          </div>
-          <div className="w-full bg-[#323248] h-2 rounded-full overflow-hidden">
-            <div className="bg-yellow-500 h-full" style={{ width: `${happiness}%` }} />
-          </div>
-        </div>
-
-        <div>
-          <div className="flex justify-between text-sm mb-1">
-            <span>Здоровье</span>
-            <span>{health}%</span>
-          </div>
-          <div className="w-full bg-[#323248] h-2 rounded-full overflow-hidden">
-            <div className="bg-green-500 h-full" style={{ width: `${health}%` }} />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-between mt-4">
-        <button
-          className="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm md:text-base font-medium flex-1 mr-2 disabled:opacity-50 hover:bg-purple-600 transition-colors"
-          onClick={handleFeed}
-          disabled={isUpdating || !user}
-        >
-          {isUpdating && showFeedPhrase ? 'Кормление...' : 'Покормить'}
-        </button>
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm md:text-base font-medium flex-1 ml-2 disabled:opacity-50 hover:bg-blue-600 transition-colors"
-          onClick={handlePlay}
-          disabled={isUpdating || !user}
-        >
-          {isUpdating && showPlayPhrase ? 'Играем...' : 'Поиграть'}
-        </button>
-      </div>
     </div>
   );
 };

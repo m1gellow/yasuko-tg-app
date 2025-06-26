@@ -51,7 +51,9 @@ const AppContent: React.FC = () => {
   const [showPurchaseNotification, setShowPurchaseNotification] = useState(false);
   const [lastPurchase, setLastPurchase] = useState<StoreItem | null>(null);
   const [isTapAnimationActive, setIsTapAnimationActive] = useState(false);
-  const [showCharacterCard, setShowCharacterCard] = useState(false);
+
+  const [showCharacterCard, setShowCharacterCard] = useState(true);
+  
   const [showAuthScreen, setShowAuthScreen] = useState(false);
   const [showTelegramAuth, setShowTelegramAuth] = useState(false);
   const [referralCodeProcessed, setReferralCodeProcessed] = useState(false);

@@ -32,7 +32,7 @@ interface TapGameProps {
   showCharacterCard: boolean;
 }
 
-const TapGame: React.FC<TapGameProps> = React.memo(({ target, user, onTap, onLevelUp, showCharacterCard }) => {
+const TapGame: React.FC<TapGameProps> = React.memo(({ target, user, onTap, onLevelUp, showCharacterCard, onToggleCharacterCard }) => {
   const [localTarget, setLocalTarget] = useState(target);
   const [tapAnimation, setTapAnimation] = useState(false);
   const [tapPoints, setTapPoints] = useState<{ points: number; x: number; y: number; id: number }[]>([]);
@@ -57,6 +57,7 @@ const TapGame: React.FC<TapGameProps> = React.memo(({ target, user, onTap, onLev
   const characterRef = useRef<HTMLDivElement>(null);
   const tapSoundRef = useRef<HTMLAudioElement | null>(null);
   const natureSoundRef = useRef<HTMLAudioElement | null>(null);
+
 
   const { telegram } = useTelegram();
   const { phrases, getRandomPhrase } = usePhrases('click');
@@ -477,9 +478,12 @@ const TapGame: React.FC<TapGameProps> = React.memo(({ target, user, onTap, onLev
           </div>
 
           {/* Character Info */}
-          <div className="mt-6">
-            <CharacterInfoCard target={localTarget} energyStatus={energyStatus} />
+  
+            <div className="mt-6">
+            <CharacterInfoCard target={localTarget} energyStatus={energyStatus}/>
           </div>
+  
+          
         </div>
 
         {/* Status Bar */}
@@ -514,6 +518,7 @@ const TapGame: React.FC<TapGameProps> = React.memo(({ target, user, onTap, onLev
               hunger={characterData?.satiety || 70}
               mood="Довольный"
               characterType="yasuko"
+              onToggleCharacterCard={onToggleCharacterCard}
             />
           </div>
         </div>

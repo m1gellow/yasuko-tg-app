@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HomeIcon, TrophyIcon, ShoppingBagIcon, UserIcon, RefreshCwIcon } from 'lucide-react';
+import { HomeIcon, TrophyIcon, ShoppingBagIcon, UserIcon, RefreshCwIcon, Play } from 'lucide-react';
 
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../../contexts/GameContext';
@@ -123,7 +123,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange, onToggl
             } ${activeTab === 'game' ? 'border-2 border-white' : ''}`}
             onClick={handleToggleCard}
           >
-            <RefreshCwIcon size={24} className="text-[#1A1A27]" />
+            <Play size={24} className="text-[#1A1A27]" />
           </button>
         </div>
         

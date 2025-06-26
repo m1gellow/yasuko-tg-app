@@ -181,6 +181,7 @@ const MainContent: React.FC<MainContentProps> = memo(
             onTap={onTap}
             onLevelUp={onLevelUp}
             showCharacterCard={showCharacterCard}
+            onToggleCharacterCard={onToggleCharacterCard}
           />
         </TabContent>
 
