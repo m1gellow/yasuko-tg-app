@@ -22,6 +22,7 @@ import {
   ZapIcon, // для премиум-товаров
 } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
+import PromoCodeModal from './ui/modals/PromoCodeModal';
 
 // Функция для получения иконки по категории товара
 const getCategoryIcon = (category: string) => {
@@ -47,20 +48,17 @@ const getCategoryIcon = (category: string) => {
   }
 };
 
-
 const Store: React.FC<StoreProps> = ({ userCoins, onPurchase }) => {
   const [filter, setFilter] = useState<'all' | 'food' | 'boosters' | 'accessories' | 'games'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [items, setItems] = useState<StoreItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showPromoCodeModal, setShowPromoCodeModal] = useState(false);
-  const [promoCode, setPromoCode] = useState('');
-  const [promoCodeMessage, setPromoCodeMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showInventory, setShowInventory] = useState(false);
   const [purchasedItems, setPurchasedItems] = useState<StoreItem[]>([]);
   const [showNutCatcherGame, setShowNutCatcherGame] = useState(false);
   const [hasNutCatcherGame, setHasNutCatcherGame] = useState(false);
 
+  const [isOpenPromoModal, setIsOpenPromoModal] = useState(false);
   const { user } = useAuth();
   const { dispatch } = useGame();
 
@@ -127,28 +125,6 @@ const Store: React.FC<StoreProps> = ({ userCoins, onPurchase }) => {
   const specialOffers = filteredItems.filter((item) => item.category === 'energy');
   const regularItems = filteredItems.filter((item) => item.category !== 'energy');
 
-  const handleApplyPromoCode = async () => {
-    if (!promoCode.trim() || !user) return;
-
-    try {
-      const result = await storeService.applyPromoCode(user.id, promoCode.trim());
-
-      setPromoCodeMessage({
-        type: result.success ? 'success' : 'error',
-        text: result.message,
-      });
-
-      if (result.success) setPromoCode('');
-
-      setTimeout(() => setPromoCodeMessage(null), 3000);
-    } catch (error) {
-      setPromoCodeMessage({
-        type: 'error',
-        text: 'Произошла ошибка при применении промокода',
-      });
-    }
-  };
-
   const handlePurchase = useCallback(
     (item: StoreItem) => {
       if (userCoins >= item.price) {
@@ -175,8 +151,16 @@ const Store: React.FC<StoreProps> = ({ userCoins, onPurchase }) => {
     }
   };
 
+  const handlePromoModalClose = () => {
+    setIsOpenPromoModal(false);
+  };
+
+  //   const [isOpenPromoModal, setIsOpenPromoModal] = useState(false);
   return (
     <div className="flex flex-col items-center justify-center py-4 relative bg-[#1E1E2D] min-h-screen">
+      {/* Modals */}
+      {isOpenPromoModal && <PromoCodeModal onClose={handlePromoModalClose} />}
+
       {/* Header with coins */}
       <div className="w-full max-w-md mb-4 px-4">
         <div className="flex justify-between items-center w-full bg-purple-900/50 p-3 rounded-lg shadow-lg">
@@ -202,7 +186,7 @@ const Store: React.FC<StoreProps> = ({ userCoins, onPurchase }) => {
           <div className="flex flex-col items-end">
             <button
               className="text-sm text-white bg-purple-600 px-3 py-1 rounded-lg"
-              onClick={() => setShowPromoCodeModal(true)}
+              onClick={() => setIsOpenPromoModal(true)}
             >
               ПРОМОКОД
             </button>
@@ -258,7 +242,7 @@ const Store: React.FC<StoreProps> = ({ userCoins, onPurchase }) => {
           {/* Promo banner */}
           <div
             className="w-full mb-6 bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-xl p-4 border border-purple-500/30 cursor-pointer hover:border-purple-500/50 transition-all"
-            onClick={() => setShowPromoCodeModal(true)}
+            onClick={() => setIsOpenPromoModal(true)}
           >
             <div className="flex items-center">
               <Gift className="text-yellow-400 mr-3" size={24} />
@@ -354,50 +338,6 @@ const Store: React.FC<StoreProps> = ({ userCoins, onPurchase }) => {
           )}
         </div>
       </div>
-
-      {/* Modals */}
-      {showPromoCodeModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gradient-to-br from-[#1a1538] to-[#0f0c1d] rounded-xl p-6 w-full max-w-md border border-purple-500/30 shadow-lg">
-            <h3 className="text-lg font-bold text-white mb-4">АКТИВАЦИЯ ПРОМОКОДА</h3>
-
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Введите промокод"
-                className="w-full bg-[#1A1A27] text-white px-4 py-2 rounded-lg border border-purple-500/30 focus:border-purple-500/50 focus:outline-none"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-              />
-              {promoCodeMessage && (
-                <p
-                  className={`mt-2 text-sm ${promoCodeMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}
-                >
-                  {promoCodeMessage.text}
-                </p>
-              )}
-            </div>
-
-            <div className="flex space-x-3">
-              <button
-                className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg font-medium"
-                onClick={handleApplyPromoCode}
-              >
-                АКТИВИРОВАТЬ
-              </button>
-              <button
-                className="flex-1 bg-gray-700 text-white px-4 py-2 rounded-lg font-medium"
-                onClick={() => {
-                  setShowPromoCodeModal(false);
-                  setPromoCodeMessage(null);
-                }}
-              >
-                ОТМЕНА
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showNutCatcherGame && (
         <NutCatcherGame onClose={() => setShowNutCatcherGame(false)} onEnergyEarned={handleGameEnergyEarned} />

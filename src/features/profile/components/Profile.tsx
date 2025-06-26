@@ -8,6 +8,7 @@ import { useTelegram } from '../../../contexts/TelegramContext';
 import ProgressBar from '../../../components/ui/ProgressBar';
 import NutCatcherGame from '../../games/NutCatcherGame/components/ui';
 import { useAuth } from '../../../contexts/AuthContext';
+import { PromoCodeModal } from '../../store/components';
 
 const Profile: React.FC = () => {
   const { state, dispatch } = useGame();
@@ -19,6 +20,7 @@ const Profile: React.FC = () => {
   const [userProgress, setUserProgress] = useState<any>(null);
   const [showMiniGame, setShowMiniGame] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
 
   useEffect(() => {
     const initUser = async () => {
@@ -178,8 +180,13 @@ const Profile: React.FC = () => {
         },
       ];
 
+
+
+
+
   return (
     <div className="flex flex-col items-center justify-center py-4 relative bg-[#1E1E2D] min-h-screen">
+
       {/* Header with user info */}
       <div className="w-full max-w-md mb-4 px-4">
         <div className="flex justify-between items-center w-full bg-purple-900/50 p-3 rounded-lg shadow-lg">
