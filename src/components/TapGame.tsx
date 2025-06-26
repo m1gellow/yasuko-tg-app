@@ -155,8 +155,8 @@ const TapGame: React.FC<TapGameProps> = React.memo(({ target, user, onTap, onLev
         natureSoundRef.current.play().catch((err) => {
           setNatureEnabled(false);
 
-          if(err){
-            console.error(err)
+          if (err) {
+            console.error(err);
           }
         });
       } catch (error) {
@@ -263,7 +263,7 @@ const TapGame: React.FC<TapGameProps> = React.memo(({ target, user, onTap, onLev
         currentTaps: newTaps,
       }));
 
-      if (newTaps >= localTarget.requiredTaps && localTarget.level === 1) {
+      if (newTaps >= localTarget.requiredTaps) {
         setLocalTarget((prev) => ({
           ...prev,
           state: 'transitioning',
