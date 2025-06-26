@@ -94,9 +94,9 @@ const EnergyEmptyModal: React.FC<EnergyEmptyModalProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
       {showSuccess ? (
-        <div className="bg-gradient-to-br from-green-600 to-emerald-800 rounded-t-2xl sm:rounded-2xl p-6 text-center w-full max-w-sm shadow-xl border border-green-400/30 animate-pop-in">
+        <div className="bg-gradient-to-br from-green-600 to-emerald-800 rounded-2xl p-6 text-center w-full max-w-sm shadow-xl border border-green-400/30 animate-pop-in">
           <div className="bg-green-500/20 p-3 rounded-full inline-flex mb-3">
             <GiftIcon className="text-white" size={32} />
           </div>
@@ -104,9 +104,9 @@ const EnergyEmptyModal: React.FC<EnergyEmptyModalProps> = ({ onClose }) => {
           <p className="text-white/90 text-sm">+100 энергии и +100 монет</p>
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-[#1e183a] to-[#15122b] rounded-t-2xl sm:rounded-2xl w-full max-w-sm shadow-xl border-t border-purple-500/30 animate-slide-up">
+        <div className="bg-gradient-to-br from-[#1e183a] to-[#15122b] rounded-2xl w-full max-w-sm shadow-xl border border-purple-500/30 animate-scale-in">
           {/* Compact Header */}
-          <div className="bg-gradient-to-r from-red-600 to-red-800 p-3 flex justify-between items-center">
+          <div className="bg-gradient-to-r from-red-600 to-red-800 p-3 flex justify-between items-center rounded-t-2xl">
             <div className="flex items-center space-x-2">
               <BoltIcon className="text-white" size={20} />
               <h2 className="text-lg font-bold text-white">ЭНЕРГИЯ ЗАКОНЧИЛАСЬ</h2>
