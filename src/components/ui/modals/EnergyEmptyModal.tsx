@@ -5,6 +5,7 @@ import { referralService } from '../../../services/referralService';
 import { useTelegram } from '../../../contexts/TelegramContext';
 import { BoltIcon, UsersIcon, GamepadIcon, XIcon, ZapIcon, GiftIcon } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
+import { supabase } from '../../../lib/supabase';
 
 interface EnergyEmptyModalProps {
   onClose: () => void;
@@ -19,6 +20,20 @@ const EnergyEmptyModal: React.FC<EnergyEmptyModalProps> = ({ onClose }) => {
   const { user } = useAuth();
   const { telegram } = useTelegram();
 
+  // const createReffCode = async () => {
+  //   const myId = 'd918e4ca-976f-467f-bb45-23e75b596b61';
+  //   try {
+  //     const result = await referralService.createReferralLink(myId, {
+  //       reward: { energy: 100, coins: 120 },
+  //     });
+  //     setCreatingReferral(true);
+  //     console.log(result.code)
+
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+
   const handleCreateReferral = async () => {
     if (!user) {
       alert('Для создания приглашения необходимо войти в систему');
@@ -27,18 +42,17 @@ const EnergyEmptyModal: React.FC<EnergyEmptyModalProps> = ({ onClose }) => {
     }
 
     setCreatingReferral(true);
+
     try {
       const result = await referralService.createReferralLink(user.id, {
-        reward: { coins: 100, energy: 100 }
+        reward: { coins: 100, energy: 100 },
       });
-      
+
       if (result.success && result.code) {
-        const shareableLink = referralService.generateShareableLink(result.code);
-        setReferralLink(shareableLink);
+       
         
-        if (telegram?.WebApp) {
-          shareToTelegram(shareableLink);
-        }
+        setReferralLink(result.code);
+
       } else {
         alert('Не удалось создать приглашение. Пожалуйста, попробуйте ещё раз.');
       }
@@ -53,13 +67,14 @@ const EnergyEmptyModal: React.FC<EnergyEmptyModalProps> = ({ onClose }) => {
   const copyReferralLink = () => {
     if (!referralLink) return;
 
-    navigator.clipboard.writeText(referralLink)
+    navigator.clipboard
+      .writeText(referralLink)
       .then(() => {
         setCopied(true);
         if (telegram?.HapticFeedback) {
           telegram.HapticFeedback.notificationOccurred('success');
         }
-        
+
         setTimeout(() => setCopied(false), 2000);
         setShowSuccess(true);
         setTimeout(() => {
@@ -69,25 +84,32 @@ const EnergyEmptyModal: React.FC<EnergyEmptyModalProps> = ({ onClose }) => {
           onClose();
         }, 2000);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Не удалось скопировать ссылку:', err);
         alert('Не удалось скопировать ссылку. Пожалуйста, скопируйте её вручную.');
       });
   };
-  
+
   const shareToTelegram = (link: string) => {
     try {
       if (telegram) {
         const shareText = `Присоединяйся к игре "Ясуко"! Получи +100 монет и +100 энергии по моей реферальной ссылке: ${link}`;
-        
+
         if (telegram.WebApp) {
-          telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`);
+          telegram.WebApp.openTelegramLink(
+            `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`,
+          );
         } else if (telegram.openTelegramLink) {
-          telegram.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`);
+          telegram.openTelegramLink(
+            `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`,
+          );
         } else {
-          window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`, '_blank');
+          window.open(
+            `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`,
+            '_blank',
+          );
         }
-        
+
         setShowSuccess(true);
         dispatch({ type: 'REGEN_ENERGY', payload: 100 });
         dispatch({ type: 'CLAIM_REWARD', payload: { type: 'coins', amount: 100 } });
@@ -102,9 +124,7 @@ const EnergyEmptyModal: React.FC<EnergyEmptyModalProps> = ({ onClose }) => {
       console.error('Ошибка при попытке поделиться в Telegram:', error);
       try {
         if (window.Telegram && window.Telegram.WebApp) {
-          window.Telegram.WebApp.openTelegramLink(
-            `https://t.me/share/url?url=${encodeURIComponent(link)}`
-          );
+          window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}`);
           setShowSuccess(true);
           dispatch({ type: 'REGEN_ENERGY', payload: 100 });
           dispatch({ type: 'CLAIM_REWARD', payload: { type: 'coins', amount: 100 } });
@@ -151,21 +171,19 @@ const EnergyEmptyModal: React.FC<EnergyEmptyModalProps> = ({ onClose }) => {
               <BoltIcon className="text-white mr-2" size={24} />
               <h2 className="text-xl font-bold text-white">ЭНЕРГИЯ ЗАКОНЧИЛАСЬ!</h2>
             </div>
-            <button 
-              onClick={handleClose} 
+            <button
+              onClick={handleClose}
               className="text-white/80 hover:text-white p-1 rounded-full hover:bg-red-700/50 transition-all"
               aria-label="Закрыть"
             >
               <XIcon size={24} />
             </button>
           </div>
-          
+
           {/* Content */}
           <div className="p-6">
-            <p className="text-center text-gray-300 mb-6">
-              Ваша энергия закончилась! Выберите способ восполнения:
-            </p>
-            
+            <p className="text-center text-gray-300 mb-6">Ваша энергия закончилась! Выберите способ восполнения:</p>
+
             <div className="space-y-4">
               {/* Mini Game Option */}
               <div className="bg-gradient-to-br from-[#2a1a4a] to-[#1a0e33] p-4 rounded-xl border border-purple-500/20 hover:border-purple-500/40 transition-all shadow-lg">
@@ -178,14 +196,14 @@ const EnergyEmptyModal: React.FC<EnergyEmptyModalProps> = ({ onClose }) => {
                 <p className="text-sm text-gray-400 mb-4">
                   Играйте в мини-игру и получайте энергию за каждый пойманный орех!
                 </p>
-                <button 
+                <button
                   onClick={openMiniGame}
                   className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white py-3 rounded-lg font-bold transition-all shadow-md"
                 >
                   ИГРАТЬ
                 </button>
               </div>
-              
+
               {/* Referral Option */}
               <div className="bg-gradient-to-br from-[#2a1a4a] to-[#1a0e33] p-4 rounded-xl border border-purple-500/20 hover:border-purple-500/40 transition-all shadow-lg">
                 <div className="flex items-center mb-3">
@@ -197,14 +215,15 @@ const EnergyEmptyModal: React.FC<EnergyEmptyModalProps> = ({ onClose }) => {
                 <p className="text-sm text-gray-400 mb-4">
                   Пригласите друга и получите бонус: +100 энергии и +100 монет, когда друг зарегистрируется!
                 </p>
-                
+                {/* <button onClick={createReffCode}>Create reff code</button> */}
+
                 {!referralLink ? (
-                  <button 
+                  <button
                     onClick={handleCreateReferral}
                     disabled={creatingReferral || !user}
                     className={`w-full py-3 rounded-lg font-bold transition-all shadow-md ${
-                      creatingReferral 
-                        ? 'bg-gray-600 text-gray-400' 
+                      creatingReferral
+                        ? 'bg-gray-600 text-gray-400'
                         : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
                     }`}
                   >
@@ -223,17 +242,17 @@ const EnergyEmptyModal: React.FC<EnergyEmptyModalProps> = ({ onClose }) => {
                       {referralLink}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                      <button 
+                      <button
                         onClick={copyReferralLink}
                         className={`py-2 rounded-lg font-bold transition-all shadow-md ${
-                          copied 
-                            ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white' 
+                          copied
+                            ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white'
                             : 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black'
                         }`}
                       >
                         {copied ? 'СКОПИРОВАНО!' : 'КОПИРОВАТЬ'}
                       </button>
-                      <button 
+                      <button
                         onClick={() => shareToTelegram(referralLink)}
                         className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2 rounded-lg font-bold transition-all shadow-md"
                       >
@@ -244,13 +263,13 @@ const EnergyEmptyModal: React.FC<EnergyEmptyModalProps> = ({ onClose }) => {
                 )}
               </div>
             </div>
-            
+
             <div className="mt-6 text-center text-sm text-gray-400">
               <div className="flex items-center justify-center mb-2">
                 <ZapIcon className="text-yellow-400 mr-2" size={16} />
                 <span>Энергия восстанавливается автоматически (1 каждые 3 минуты)</span>
               </div>
-              <button 
+              <button
                 onClick={handleClose}
                 className="text-gray-400 hover:text-white bg-[#1e183a] hover:bg-[#2a1a4a] px-6 py-2 rounded-lg transition-all border border-purple-500/20 mt-2"
               >

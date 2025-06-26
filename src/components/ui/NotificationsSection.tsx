@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BellIcon, TrophyIcon, GiftIcon } from 'lucide-react';
-import { useAuth } from '../../../../contexts/AuthContext';
-import { notificationService } from '../../../../services/notificationService';
+import { useAuth } from '../../contexts/AuthContext';
+import { notificationService } from '../../services/notificationService';
 
 
 interface NotificationsSectionProps {
