@@ -81,7 +81,7 @@ const StartScreen: React.FC<StartScreenProps> = ({
             className="absolute top-20 left-1/3 w-6 h-6 animate-bounce object-contain z-20"
           />
           <img
-            src="/assets/oreh.png"
+            src="/assets/rocket.png"
             alt="Орех"
             className="absolute top-24 right-1/4 w-5 h-5 animate-bounce object-contain z-20"
             style={{ animationDelay: '0.3s' }}
@@ -106,7 +106,7 @@ const StartScreen: React.FC<StartScreenProps> = ({
                 <span className="text-yellow-400 font-medium">+1</span>
               </div>
               <div className="flex flex-col items-center">
-                <img src="/assets/oreh.png" alt="Грецкий" className="w-8 h-8 mb-1" />
+                <img src="/assets/rocket.png" alt="Грецкий" className="w-8 h-8 mb-1" />
                 <span className="text-orange-400 font-medium">+2</span>
               </div>
             </div>

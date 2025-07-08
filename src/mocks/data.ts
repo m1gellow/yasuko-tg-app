@@ -34,7 +34,7 @@ export const mockTapTarget: TapTarget = {
   id: "target-1",
   name: "ОРЕХ",
   basePoints: 1,
-  image: "/assets/oreh.png",
+  image: "/assets/rocket.png",
   level: 1,
   requiredTaps: 200,
   currentTaps: 25,

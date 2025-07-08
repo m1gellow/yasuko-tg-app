@@ -14,7 +14,7 @@ const slides = [
     id: 1,
     title: 'Добро пожаловать в Ясуко!',
     description: 'Здесь ваш персонаж эволюционирует от простого Ореха до удивительного Павлина Ясуко благодаря вашему уходу и вниманию.',
-    image: '/assets/oreh.png',
+    image: '/assets/rocket.png',
     animationClass: 'animate-float'
   },
   {

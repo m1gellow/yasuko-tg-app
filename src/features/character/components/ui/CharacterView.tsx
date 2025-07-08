@@ -45,7 +45,7 @@ const CharacterView: React.FC<CharacterViewProps> = memo(({
       
       // Предзагрузка изображений
       const walnutImg = new Image();
-      walnutImg.src = '/assets/oreh.png';
+      walnutImg.src = '/assets/rocket.png';
       
       const squirrelImg = new Image();
       squirrelImg.src = '/assets/belka.png';
@@ -159,10 +159,10 @@ const CharacterView: React.FC<CharacterViewProps> = memo(({
     if (characterType === 'yasuko') {
       // Уровни Ясуко
       switch (level) {
-        case 1: return "/assets/oreh.png"; // Орех
+        case 1: return "/assets/rocket.png"; // Орех
         case 2:
         case 3: return "/assets/belka.png"; // Белка
-        default: return "/assets/oreh.png";
+        default: return "/assets/rocket.png";
       }
     } else {
       // Уровни Фишко
@@ -176,7 +176,7 @@ const CharacterView: React.FC<CharacterViewProps> = memo(({
 
   // Запасное изображение в случае ошибки загрузки
   const fallbackImage = characterType === 'yasuko' 
-    ? "/assets/oreh.png"
+    ? "/assets/rocket.png"
     : "/assets/fishko-egg.png";
 
   // Дополнительный класс для анимации парения

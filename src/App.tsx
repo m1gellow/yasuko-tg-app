@@ -40,7 +40,7 @@ const AppContent: React.FC = () => {
     id: 'target-1',
     name: 'ОРЕХ',
     basePoints: 1,
-    image: '/assets/oreh.png',
+    image: '/assets/rocket.png',
     level: 1,
     requiredTaps: 100,
     currentTaps: 0,

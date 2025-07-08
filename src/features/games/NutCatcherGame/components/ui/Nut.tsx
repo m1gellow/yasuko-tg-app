@@ -14,7 +14,7 @@ const Nut: React.FC<NutProps> = ({ nut }) => {
       case 'walnut':
         return '/assets/orehgame.png'; // Крупный орех
       case 'hazelnut':
-        return '/assets/oreh.png'; // Альтернативное изображение для разнообразия
+        return '/assets/rocket.png'; // Альтернативное изображение для разнообразия
     }
   };
 
