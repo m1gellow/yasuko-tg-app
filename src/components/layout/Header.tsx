@@ -28,7 +28,7 @@ const Header: React.FC<HeaderProps> = ({
       <div className="flex justify-between items-center mb-4">
         <div className="inline-flex items-center bg-gradient-to-r from-yellow-500 to-orange-500 text-transparent bg-clip-text">
           <SunIcon className="mr-2" size={24} />
-          <h1 className="text-2xl font-extrabold tracking-wide">ЯСУКО</h1>
+          <h1 className="text-2xl font-extrabold tracking-wide">YOFISH</h1>
         </div>
         <div className="flex items-center gap-2">
           <Notifications
